@@ -1,0 +1,146 @@
+import React from "react";
+
+const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }) => {
+  if (loading) {
+    return (
+      <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6">
+        <div className="flex items-center justify-center py-8">
+          <div className="text-gray-500">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full mx-auto bg-white border border-red-200 rounded-2xl shadow-md p-6">
+        <div className="flex items-center justify-center py-8">
+          <div className="text-red-600">Error: {error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data || !data.leads || data.leads.length === 0) {
+    return (
+      <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6">
+        <div className="flex items-center justify-center py-8">
+          <div className="text-gray-500">No data available</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Get all unique keys from all leads to create columns
+  const allKeys = new Set();
+  data.leads.forEach((lead) => {
+    Object.keys(lead).forEach((key) => allKeys.add(key));
+  });
+
+  const columns = Array.from(allKeys);
+
+  // Format cell value for display
+  const formatCellValue = (value) => {
+    if (value === null || value === undefined || value === "") {
+      return <span className="text-gray-400 italic">—</span>;
+    }
+    if (typeof value === "object") {
+      return JSON.stringify(value);
+    }
+    if (typeof value === "string" && value.length > 100) {
+      return (
+        <span title={value} className="truncate block max-w-xs">
+          {value.substring(0, 100)}...
+        </span>
+      );
+    }
+    return String(value);
+  };
+
+  // Format column name for display
+  const formatColumnName = (key) => {
+    return key
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, (str) => str.toUpperCase())
+      .trim();
+  };
+
+  return (
+    <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6 mt-5">
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-gray-900">Search Results</h2>
+        {data.total !== undefined && (
+          <p className="text-sm text-gray-500 mt-1">
+            Total: {data.total.toLocaleString()} | Showing: {data.leads.length}
+            {hasMore && (
+              <span className="ml-2 text-indigo-600">(More available)</span>
+            )}
+          </p>
+        )}
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              {columns.map((column) => (
+                <th
+                  key={column}
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-b border-gray-200"
+                >
+                  {formatColumnName(column)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {data.leads.map((lead, index) => (
+              <tr key={index} className="hover:bg-gray-50">
+                {columns.map((column) => (
+                  <td
+                    key={column}
+                    className="px-4 py-3 text-sm text-gray-900 border-b border-gray-100"
+                  >
+                    {formatCellValue(lead[column])}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Load More Button */}
+      {hasMore && (
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={onLoadMore}
+            disabled={loadingMore}
+            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          >
+            {loadingMore ? (
+              <>
+                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading...
+              </>
+            ) : (
+              "Load More"
+            )}
+          </button>
+        </div>
+      )}
+
+      {!hasMore && data && data.leads && data.leads.length > 0 && (
+        <div className="mt-4 text-center text-sm text-gray-500">
+          No more results to load
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DynamicTable;
+
