@@ -1,6 +1,36 @@
 import React from "react";
+import { FaDownload } from "react-icons/fa";
 
 const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }) => {
+  const handleDownload = () => {
+    if (!data || !data.leads || data.leads.length === 0) {
+      return;
+    }
+
+    // Prepare JSON data
+    const jsonData = {
+      total: data.total,
+      success: data.success,
+      leads: data.leads,
+      downloadedAt: new Date().toISOString(),
+    };
+
+    // Create a blob with the JSON data
+    const jsonString = JSON.stringify(jsonData, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    // Create a temporary anchor element and trigger download
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `find-people-results-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
   if (loading) {
     return (
       <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6">
@@ -67,16 +97,26 @@ const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }
 
   return (
     <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6 mt-5">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Search Results</h2>
-        {data.total !== undefined && (
-          <p className="text-sm text-gray-500 mt-1">
-            Total: {data.total.toLocaleString()} | Showing: {data.leads.length}
-            {hasMore && (
-              <span className="ml-2 text-indigo-600">(More available)</span>
-            )}
-          </p>
-        )}
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Search Results</h2>
+          {data.total !== undefined && (
+            <p className="text-sm text-gray-500 mt-1">
+              Total: {data.total.toLocaleString()} | Showing: {data.leads.length}
+              {hasMore && (
+                <span className="ml-2 text-indigo-600">(More available)</span>
+              )}
+            </p>
+          )}
+        </div>
+        <button
+          onClick={handleDownload}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+          title="Download data as JSON"
+        >
+          <FaDownload />
+          Download JSON
+        </button>
       </div>
 
       <div className="overflow-x-auto">
