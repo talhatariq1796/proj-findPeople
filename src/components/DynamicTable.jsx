@@ -2,35 +2,6 @@ import React from "react";
 import { FaDownload } from "react-icons/fa";
 
 const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }) => {
-  const handleDownload = () => {
-    if (!data || !data.leads || data.leads.length === 0) {
-      return;
-    }
-
-    // Prepare JSON data
-    const jsonData = {
-      total: data.total,
-      success: data.success,
-      leads: data.leads,
-      downloadedAt: new Date().toISOString(),
-    };
-
-    // Create a blob with the JSON data
-    const jsonString = JSON.stringify(jsonData, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-
-    // Create a temporary anchor element and trigger download
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `find-people-results-${new Date().toISOString().split("T")[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-
-    // Cleanup
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
   if (loading) {
     return (
       <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6">
@@ -68,6 +39,63 @@ const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }
   });
 
   const columns = Array.from(allKeys);
+
+  const downloadJson = () => {
+    const jsonData = {
+      total: data.total,
+      success: data.success,
+      leads: data.leads,
+      downloadedAt: new Date().toISOString(),
+    };
+
+    const jsonString = JSON.stringify(jsonData, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `find-people-results-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const escapeCsvValue = (value) => {
+    if (value === null || value === undefined) {
+      return "";
+    }
+    let stringValue = value;
+    if (typeof value === "object") {
+      stringValue = JSON.stringify(value);
+    }
+    stringValue = String(stringValue);
+    if (stringValue.includes('"') || stringValue.includes(",") || stringValue.includes("\n")) {
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+    return stringValue;
+  };
+
+  const downloadCsv = () => {
+    const headerRow = columns.map((column) => escapeCsvValue(column)).join(",");
+    const rows = data.leads.map((lead) =>
+      columns.map((column) => escapeCsvValue(lead[column])).join(",")
+    );
+    const csvString = [headerRow, ...rows].join("\n");
+
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `find-people-results-${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   // Format cell value for display
   const formatCellValue = (value) => {
@@ -109,14 +137,24 @@ const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }
             </p>
           )}
         </div>
-        <button
-          onClick={handleDownload}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-          title="Download data as JSON"
-        >
-          <FaDownload />
-          Download JSON
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={downloadJson}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+            title="Download data as JSON"
+          >
+            <FaDownload />
+            JSON
+          </button>
+          <button
+            onClick={downloadCsv}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
+            title="Download data as CSV"
+          >
+            <FaDownload />
+            CSV
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">

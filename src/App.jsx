@@ -1,19 +1,29 @@
 import React from "react";
-import SmartSearchFormWithSubmit from "./components/SmartSearchFormWithSubmit";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Profile from "./pages/Profile";
+import Auth from "./pages/auth/Auth";
+import AuthCallback from "./pages/auth/AuthCallback";
+import ProtectedRoute from "./components/ProtectedRoute";
+import DashboardLayout from "./layouts/DashboardLayout";
 
 const App = () => {
   return (
-    <div className="h-screen bg-slate-100 p-4 w-full">
-      <div className="flex flex-col space-y-3 items-start justify-start w-full h-full">
-<h1 className="text-2xl font-semibold capitalize">Find People</h1>
-      <SmartSearchFormWithSubmit />
-      </div>
-      {/* <div className="w-full mx-auto bg-gradient-to-br from-slate-50 to-white border border-gray-200 rounded-2xl shadow-md p-6 space-y-2 mt-5">
-      Table here
 
-      </div> */}
-
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Auth />} />
+        <Route element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
+          <Route path="/home" element={<Home />} />
+          <Route path="/profile" element={<Profile />} />
+        </Route>
+        <Route path="/auth/callback" element={<AuthCallback />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 

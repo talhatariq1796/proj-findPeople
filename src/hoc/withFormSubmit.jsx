@@ -107,11 +107,16 @@ const withFormSubmit = (WrappedComponent) => {
         }
 
         // Store query and API key for pagination
+        const apiKey = values.apiKey?.trim();
+        if (!apiKey) {
+          throw new Error("API key is required");
+        }
+
         setCurrentQuery(query);
-        setCurrentApiKey(values.apiKey);
+        setCurrentApiKey(apiKey);
         setPaginationToken(null);
 
-        const responseData = await makeApiCall(query, values.apiKey);
+        const responseData = await makeApiCall(query, apiKey);
 
         // Store pagination token if present
         if (responseData.pagination && responseData.pagination.token) {

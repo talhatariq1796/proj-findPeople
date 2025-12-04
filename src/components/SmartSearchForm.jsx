@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { FaPaperPlane } from "react-icons/fa";
@@ -47,23 +47,27 @@ const validationSchema = Yup.object().shape({
 });
 
 
-const SmartSearchForm = ({ onSubmit }) => {
-  const initialValues = {
-    apiKey: "",
-    formData: {
-      location: "",
-      industry: "",
-      staffSize: "",
-      keywords: "",
-      jobTitles: "",
-    },
-  };
+const SmartSearchForm = ({ onSubmit, initialApiKey = "", apiKeyLoading = false, apiKeyError = "" }) => {
+  const initialValues = useMemo(
+    () => ({
+      apiKey: initialApiKey || "",
+      formData: {
+        location: "",
+        industry: "",
+        staffSize: "",
+        keywords: "",
+        jobTitles: "",
+      },
+    }),
+    [initialApiKey]
+  );
 
   const fields = ["location", "industry", "staffSize", "keywords", "jobTitles"];
 
   return (
     <Formik
       initialValues={initialValues}
+      enableReinitialize
       validationSchema={validationSchema}
       validateOnChange={false}
       validateOnBlur
@@ -130,8 +134,17 @@ const SmartSearchForm = ({ onSubmit }) => {
                 >
                   API Key
                 </label>
-                {errors.apiKey && touched.apiKey && (
+                {errors.apiKey && touched.apiKey ? (
                   <p className="text-xs text-red-600 mt-1">{errors.apiKey}</p>
+                ) : (
+                  <>
+                    {apiKeyLoading && (
+                      <p className="text-xs text-gray-500 mt-1">Loading API key…</p>
+                    )}
+                    {!apiKeyLoading && apiKeyError && (
+                      <p className="text-xs text-amber-600 mt-1">{apiKeyError}</p>
+                    )}
+                  </>
                 )}
               </div>
               {fields.map((field) => (
