@@ -9,6 +9,7 @@ const withFormSubmit = (WrappedComponent) => {
     const [currentQuery, setCurrentQuery] = useState(null);
     const [currentApiKey, setCurrentApiKey] = useState(null);
     const [paginationToken, setPaginationToken] = useState(null);
+    const [searchCount, setSearchCount] = useState(0);
 
     const makeApiCall = async (query, apiKey, pagination = null) => {
       const requestBody = {
@@ -117,6 +118,7 @@ const withFormSubmit = (WrappedComponent) => {
         setPaginationToken(null);
 
         const responseData = await makeApiCall(query, apiKey);
+        setSearchCount((prev) => prev + 1);
 
         // Store pagination token if present
         if (responseData.pagination && responseData.pagination.token) {
@@ -150,6 +152,7 @@ const withFormSubmit = (WrappedComponent) => {
         };
 
         const responseData = await makeApiCall(currentQuery, currentApiKey, pagination);
+        setSearchCount((prev) => prev + 1);
 
         // Update pagination token
         if (responseData.pagination && responseData.pagination.token) {
@@ -185,6 +188,7 @@ const withFormSubmit = (WrappedComponent) => {
         error={error}
         onLoadMore={handleLoadMore}
         hasMore={!!paginationToken}
+        searchCount={searchCount}
       />
     );
   };

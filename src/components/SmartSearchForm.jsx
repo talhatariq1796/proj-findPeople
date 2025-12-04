@@ -47,7 +47,15 @@ const validationSchema = Yup.object().shape({
 });
 
 
-const SmartSearchForm = ({ onSubmit, initialApiKey = "", apiKeyLoading = false, apiKeyError = "" }) => {
+const COST_PER_SEARCH = 0.019;
+
+const SmartSearchForm = ({
+  onSubmit,
+  initialApiKey = "",
+  apiKeyLoading = false,
+  apiKeyError = "",
+  searchCount = 0,
+}) => {
   const initialValues = useMemo(
     () => ({
       apiKey: initialApiKey || "",
@@ -88,6 +96,8 @@ const SmartSearchForm = ({ onSubmit, initialApiKey = "", apiKeyLoading = false, 
           setErrors({});
         };
 
+        const totalCost = (searchCount * COST_PER_SEARCH).toFixed(3);
+
         return (
           <Form className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6 space-y-6">
             {/* Header */}
@@ -120,7 +130,7 @@ const SmartSearchForm = ({ onSubmit, initialApiKey = "", apiKeyLoading = false, 
                   htmlFor="apiKey"
                   className="
                   absolute text-sm text-gray-500 duration-300 transform 
-                  -translate-y-4 scale-75 left-2 capitalize top-2 z-10 origin-[0] bg-white px-2
+                  -translate-y-4 scale-75 left-2 capitalize top-2 z-10 origin-left bg-white px-2
 
                   peer-placeholder-shown:scale-100
                   peer-placeholder-shown:top-1/2
@@ -174,7 +184,7 @@ const SmartSearchForm = ({ onSubmit, initialApiKey = "", apiKeyLoading = false, 
                     htmlFor={field}
                     className="
                       absolute text-sm text-gray-500 duration-300 transform 
-                      -translate-y-4 scale-75 left-2 capitalize top-2 z-10 origin-[0] bg-white px-2
+                      -translate-y-4 scale-75 left-2 capitalize top-2 z-10 origin-left bg-white px-2
 
                       peer-placeholder-shown:scale-100
                       peer-placeholder-shown:top-1/2
@@ -209,10 +219,13 @@ const SmartSearchForm = ({ onSubmit, initialApiKey = "", apiKeyLoading = false, 
 
             {/* Footer */}
             <div className="flex flex-col gap-5 items-center justify-between pt-3 sm:flex-row">
-              <div className="bg-blue-50 border border-blue-700 rounded-lg px-3 py-1">
-                <span className="text-[11px] text-red-700 font-medium">
-                  $0.019 per search
-                </span>
+              <div className="bg-blue-50 border border-blue-700 rounded-lg px-3 py-1 text-center">
+                <p className="text-[11px] text-red-700 font-medium tracking-wide">
+                  ${COST_PER_SEARCH.toFixed(3)} per search
+                </p>
+                <p className="text-[11px] text-gray-700">
+                  Searches: {searchCount} • Total: ${totalCost}
+                </p>
               </div>
 
               <div className="flex gap-3">
