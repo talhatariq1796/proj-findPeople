@@ -174,42 +174,7 @@ const AuthForm = ({ mode, onToggleMode, apiBaseUrl }) => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="flex items-center space-x-2 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    checked={includeApiKey}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setIncludeApiKey(checked);
-                      if (!checked) {
-                        setFormData((prev) => ({ ...prev, api_key: '' }));
-                      }
-                    }}
-                  />
-                  <span>Add optional API key (stored hashed)</span>
-                </label>
 
-                {includeApiKey && (
-                  <div className="relative">
-                    <input
-                      type="password"
-                      name="api_key"
-                      value={formData.api_key}
-                      onChange={handleInputChange}
-                      className="peer w-full border rounded-xl px-4 py-3 bg-white/70 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                      placeholder=" "
-                    />
-                    <label className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none transition-all 
-                      peer-focus:top-2 peer-focus:text-xs peer-focus:text-indigo-600 
-                      peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm 
-                      peer-valid:top-2 peer-valid:text-xs">
-                      API key (kept hidden & hashed)
-                    </label>
-                  </div>
-                )}
-              </div>
             </div>
           )}
 
@@ -260,6 +225,47 @@ const AuthForm = ({ mode, onToggleMode, apiBaseUrl }) => {
               </a>
             </div>
           )}
+          {mode === 'signup' && (
+            <div className="space-y-2">
+              <label className="flex items-center space-x-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  checked={includeApiKey}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIncludeApiKey(checked);
+                    if (!checked) {
+                      setFormData((prev) => ({ ...prev, api_key: '' }));
+                    }
+                  }}
+                />
+                <span>Add optional API key (stored hashed)</span>
+              </label>
+
+              {includeApiKey && (
+                <div className="relative">
+                  <input
+                    type="password"
+                    name="api_key"
+                    value={formData.api_key}
+                    onChange={handleInputChange}
+                    className="peer w-full border rounded-xl px-4 py-3 bg-white/70 focus:ring-2 focus:ring-indigo-500 outline-none transition"
+                    placeholder=" "
+                  />
+                  {/* <label className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none transition-all 
+                  peer-focus:top-2 peer-focus:text-xs peer-focus:text-indigo-600 
+                  peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm 
+                  peer-valid:top-2 peer-valid:text-xs">
+                  API key (kept hidden & hashed)
+                </label> */}
+                </div>
+              )}
+            </div>
+          )}
+
+
+
           {/* here is the api key input */}
           <button
             type="submit"
