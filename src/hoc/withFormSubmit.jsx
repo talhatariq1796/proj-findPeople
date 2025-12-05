@@ -29,10 +29,10 @@ const withFormSubmit = (WrappedComponent) => {
     const makeApiCall = async (query, apiKey, pagination = null) => {
       const requestBody = {
         query,
-        pagination: pagination || { size: 5 },
+        pagination: pagination || { size: 50 },
       };
 
-      const response = await fetch("https://app.icypeas.com/api/find-people", {
+      const response = await fetch("https://app.icypeas.com/api/sfind-people", {
         method: "POST",
         headers: {
           Authorization: apiKey,
