@@ -6,7 +6,7 @@ const Home = () => {
   const { profile, profileLoading, profileError } = useOutletContext();
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+    <div className="w-full flex justify-center gap-7">
       <SmartSearchFormWithSubmit
         initialApiKey={profile?.api_key || ''}
         apiKeyLoading={profileLoading}

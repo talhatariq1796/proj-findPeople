@@ -1,4 +1,14 @@
 import React, { useState } from "react";
+import {
+  includeExcludeFieldConfigs,
+  headcountFieldConfig,
+} from "../constants/filterConfig";
+
+const parseCommaSeparatedValues = (value = "") =>
+  value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
 
 const withFormSubmit = (WrappedComponent) => {
   const WithFormSubmit = (props) => {
@@ -52,64 +62,55 @@ const withFormSubmit = (WrappedComponent) => {
 
         // Transform form data to API format
         const query = {};
+        const formFilters = values.formData || {};
 
-        // Parse location (include/exclude)
-        if (values.formData.location) {
-          const locations = values.formData.location
-            .split(",")
-            .map((loc) => loc.trim())
-            .filter((loc) => loc);
-          if (locations.length > 0) {
-            query.location = { include: locations };
-          }
-        }
+        includeExcludeFieldConfigs.forEach(({ key, payloadKeys }) => {
+          const includeValues = parseCommaSeparatedValues(
+            formFilters[key]?.include || ""
+          );
+          const excludeValues = parseCommaSeparatedValues(
+            formFilters[key]?.exclude || ""
+          );
 
-        // Parse industry
-        if (values.formData.industry) {
-          const industries = values.formData.industry
-            .split(",")
-            .map((ind) => ind.trim())
-            .filter((ind) => ind);
-          if (industries.length > 0) {
-            query.industry = { include: industries };
-          }
-        }
-
-        // Parse keywords
-        if (values.formData.keywords) {
-          const keywords = values.formData.keywords
-            .split(",")
-            .map((kw) => kw.trim())
-            .filter((kw) => kw);
-          if (keywords.length > 0) {
-            query.keyword = { include: keywords };
-          }
-        }
-
-        // Parse job titles
-        if (values.formData.jobTitles) {
-          const jobTitles = values.formData.jobTitles
-            .split(",")
-            .map((jt) => jt.trim())
-            .filter((jt) => jt);
-          if (jobTitles.length > 0) {
-            query.currentJobTitle = { include: jobTitles };
-          }
-        }
-
-        // Parse staff size (headcount)
-        if (values.formData.staffSize) {
-          const staffSize = values.formData.staffSize.trim();
-          // Try to parse number or range
-          const match = staffSize.match(/>\s*(\d+)/);
-          if (match) {
-            query.headcount = { ">": parseInt(match[1]) };
-          } else {
-            const numMatch = staffSize.match(/(\d+)/);
-            if (numMatch) {
-              query.headcount = { ">": parseInt(numMatch[1]) };
+          if (includeValues.length || excludeValues.length) {
+            const filter = {};
+            if (includeValues.length) {
+              filter.include = includeValues;
             }
+            if (excludeValues.length) {
+              filter.exclude = excludeValues;
+            }
+
+            const apiKeys = Array.isArray(payloadKeys)
+              ? payloadKeys
+              : [payloadKeys || key];
+
+            apiKeys.forEach((apiKey) => {
+              if (apiKey) {
+                query[apiKey] = { ...filter };
+              }
+            });
           }
+        });
+
+        const headcountValues = formFilters[headcountFieldConfig.key] || {};
+        const headcountFilter = {};
+
+        const moreThanValue = parseInt(headcountValues.moreThan, 10);
+        if (!Number.isNaN(moreThanValue)) {
+          headcountFilter[">"] = moreThanValue;
+        }
+
+        const lessThanValue = parseInt(
+          headcountValues.lessThanOrEqual,
+          10
+        );
+        if (!Number.isNaN(lessThanValue)) {
+          headcountFilter["<="] = lessThanValue;
+        }
+
+        if (Object.keys(headcountFilter).length > 0) {
+          query.headcount = headcountFilter;
         }
 
         // Store query and API key for pagination

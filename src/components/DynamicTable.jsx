@@ -26,7 +26,9 @@ const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }
     return (
       <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6">
         <div className="flex items-center justify-center py-8">
-          <div className="text-gray-500">No data available</div>
+          <div className="text-gray-900 text-center">
+            No data available. Kindly perform a query to see results.
+          </div>
         </div>
       </div>
     );
@@ -124,7 +126,8 @@ const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }
   };
 
   return (
-    <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6 mt-5">
+
+    <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Search Results</h2>
