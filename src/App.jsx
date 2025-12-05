@@ -18,8 +18,16 @@ const App = () => {
             <DashboardLayout />
           </ProtectedRoute>
         }>
-          <Route path="/home" element={<Home />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/home" element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
         </Route>
         <Route path="/auth/callback" element={<AuthCallback />} />
       </Routes>
