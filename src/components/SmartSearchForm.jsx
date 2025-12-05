@@ -52,7 +52,11 @@ const validationSchema = Yup.object().shape({
 });
 
 
-const COST_PER_SEARCH = 0.019;
+const COST_PER_SEARCH = 0.00499; // USD per page (1 credit) on the private sfind route
+const COST_PER_HUNDRED_RESULTS = COST_PER_SEARCH * 2; // 100 results need two 50-result pages
+const APOLLO_COST_PER_HUNDRED_RESULTS = 0.0236;
+const COST_ADVANTAGE_MULTIPLIER = 2.3;
+const formatCurrency = (value) => value.toFixed(5);
 
 const SmartSearchForm = ({
   onSubmit,
@@ -101,7 +105,12 @@ const SmartSearchForm = ({
           setErrors({});
         };
 
-        const totalCost = (searchCount * COST_PER_SEARCH).toFixed(3);
+        const totalCost = formatCurrency(searchCount * COST_PER_SEARCH);
+        const perSearchCost = formatCurrency(COST_PER_SEARCH);
+        const hundredResultsCost = formatCurrency(COST_PER_HUNDRED_RESULTS);
+        const apolloHundredResultsCost = formatCurrency(
+          APOLLO_COST_PER_HUNDRED_RESULTS
+        );
 
         return (
           <Form className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6 space-y-6">
@@ -161,14 +170,18 @@ const SmartSearchForm = ({
                 </>
               )}
             </div>
-            <div className="bg-blue-50 border border-blue-700 rounded-lg px-3 py-1 text-center">
-                <p className="text-[11px] text-red-700 font-medium tracking-wide">
-                  ${COST_PER_SEARCH.toFixed(3)} per search
-                </p>
-                <p className="text-[11px] text-gray-700">
-                  Searches: {searchCount} • Total: ${totalCost}
-                </p>
-              </div>
+            <div className="bg-blue-50 border border-blue-700 rounded-lg px-3 py-2 text-center space-y-1">
+              <p className="text-[11px] text-red-700 font-medium tracking-wide">
+                ${perSearchCost} per search 
+              </p>
+              <p className="text-[11px] text-gray-700">
+                Searches: {searchCount} • Total: ${totalCost}
+              </p>
+              {/* <p className="text-[11px] text-gray-600">
+                100 results ≈ ${hundredResultsCost} (≈{COST_ADVANTAGE_MULTIPLIER}×
+                cheaper vs Apollo at ${apolloHundredResultsCost})
+              </p> */}
+            </div>
             <div className="flex flex-col gap-5 items-center justify-end pt-3 sm:flex-row">
     
 
