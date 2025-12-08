@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { FaDownload } from "react-icons/fa";
 
 const DynamicTable = ({
@@ -10,8 +10,20 @@ const DynamicTable = ({
 }) => {
   const displayLeads = data?.visibleLeads || data?.leads || [];
   const columnSource = data?.leads && data.leads.length ? data.leads : displayLeads;
+  const scrollRef = useRef(null);
 
-  if (loading) {
+  // Always run hooks before any conditional returns
+  const isLoading = loading;
+  const hasError = !!error;
+  const hasNoData = !data || !data.leads || data.leads.length === 0;
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [scrollRef, pagination?.currentPage, data]);
+
+  if (isLoading) {
     return (
       <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6">
         <div className="flex items-center justify-center py-8">
@@ -21,7 +33,7 @@ const DynamicTable = ({
     );
   }
 
-  if (error) {
+  if (hasError) {
     return (
       <div className="w-full mx-auto bg-white border border-red-200 rounded-2xl shadow-md p-6">
         <div className="flex items-center justify-center py-8">
@@ -31,7 +43,7 @@ const DynamicTable = ({
     );
   }
 
-  if (!data || !data.leads || data.leads.length === 0) {
+  if (hasNoData) {
     return (
       <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6">
         <div className="flex items-center justify-center py-8">
@@ -198,7 +210,6 @@ const DynamicTable = ({
     }
   };
 
-  
   return (
 
     <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6 h-[90vh] overflow-hidden relative pb-[150px]">
@@ -233,7 +244,10 @@ const DynamicTable = ({
           </button>
         </div>
       </div>
-      <div className="overflow-x-auto h-full overflow-y-auto">
+      <div
+        ref={scrollRef}
+        className="overflow-x-auto h-full overflow-y-auto"
+      >
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>

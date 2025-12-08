@@ -56,7 +56,7 @@ const navigate = useNavigate();
   };
 
   return (
-    <header className="w-full flex items-center justify-between bg-white border border-gray-200 px-6 py-3 shadow-sm">
+    <header className="w-full flex items-center justify-between bg-white border border-gray-200 h-[7vh] px-6 py-3 shadow-sm">
       <div className="flex items-center gap-2">
         <SiIconfinder size={24}  onClick={handleHomeClick} className="cursor-pointer hover:text-gray-700 transition"/>
         <h1 className="text-xl font-semibold text-gray-900">{title}</h1>

@@ -20,7 +20,7 @@ const FormWithTable = ({
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div className="relative w-full flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-7">
+    <div className="relative w-full flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-7 h-full">
       <div className="lg:hidden flex justify-between items-center">
         <button
           type="button"
@@ -43,7 +43,8 @@ const FormWithTable = ({
 
       {/* Sidebar */}
       <aside
-        className={`fixed h-[90vh] inset-y-0 left-0 z-40 w-11/12 max-w-sm transform bg-white transition-transform rounded-2xl duration-300 shadow-2xl lg:relative lg:inset-auto lg:w-[25%] lg:max-w-none lg:translate-x-0 ${
+        className={`fixed h-full overflow-auto
+           inset-y-0 left-0 z-40 w-11/12 max-w-sm transform bg-white transition-transform rounded-2xl duration-300 shadow-2xl lg:relative lg:inset-auto lg:w-[25%] lg:max-w-none lg:translate-x-0 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-label="Search Filters"
@@ -59,7 +60,7 @@ const FormWithTable = ({
             <FiX />
           </button>
         </div>
-        <div className="h-full overflow-y-auto p-4 lg:p-0">
+        <div className="overflow-y-auto p-4 lg:p-0">
           <SmartSearchForm {...formProps} />
         </div>
       </aside>

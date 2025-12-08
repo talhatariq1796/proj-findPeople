@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { FaPaperPlane } from "react-icons/fa";
@@ -8,6 +8,7 @@ import {
   includeExcludeFieldConfigs,
   headcountFieldConfig,
 } from "../constants/filterConfig";
+import ConfirmationModal from "./modals/ConfirmationModal";
 
 const hasTextValue = (value) =>
   typeof value === "string" && value.trim().length > 0;
@@ -73,6 +74,10 @@ const SmartSearchForm = ({
     [initialApiKey]
   );
   const [expandedSections, setExpandedSections] = useState({});
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState(null);
+  const [pageCount, setPageCount] = useState(1);
+  const formikActionsRef = useRef(null);
 
   const toggleSection = (sectionKey) => {
     setExpandedSections((prev) => ({
@@ -99,7 +104,13 @@ const SmartSearchForm = ({
       validationSchema={validationSchema}
       validateOnChange={false}
       validateOnBlur
-      onSubmit={onSubmit}
+      onSubmit={(values, actions) => {
+        // Capture values and show confirmation modal before hitting the API
+        setPendingValues(values);
+        formikActionsRef.current = actions;
+        actions.setSubmitting(false);
+        setIsConfirmOpen(true);
+      }}
     >
       {({
         values,
@@ -122,6 +133,23 @@ const SmartSearchForm = ({
         const apolloHundredResultsCost = formatCurrency(
           APOLLO_COST_PER_HUNDRED_RESULTS
         );
+
+        const estimatedLeads = Math.max(0, Number(pageCount) || 0) * 50;
+        const estimatedCredits = Math.max(0, Number(pageCount) || 0);
+        const estimatedCost = formatCurrency(estimatedCredits * COST_PER_SEARCH);
+
+        const closeModal = () => {
+          setIsConfirmOpen(false);
+          setPendingValues(null);
+        };
+
+        const proceedSubmit = () => {
+          if (!pendingValues || !formikActionsRef.current) return;
+          setIsConfirmOpen(false);
+          formikActionsRef.current.setSubmitting(true);
+          // Pass pageCount alongside other values so downstream logic can use it if needed
+          onSubmit({ ...pendingValues, pageCount }, formikActionsRef.current);
+        };
 
         return (
           <Form className="w-full mx-auto p-6 space-y-6 ">
@@ -189,7 +217,7 @@ const SmartSearchForm = ({
               <p className="text-[11px] text-gray-700">
                 Searches: {searchCount} • Total: ${totalCost}
               </p>
-              <p className="text-[11px] text-gray-700">
+              <p className="text-[11px] text-gray-700 font-bold">
                 Credits used: {searchCount} • Cost this search: ${perSearchCost} (1 credit = 1 page / 50 results)
               </p>
               {/* <p className="text-[11px] text-gray-600">
@@ -221,7 +249,7 @@ const SmartSearchForm = ({
             </div>
             {/* Include / Exclude Filters */}
            
-            <div className="grid grid-cols-1 gap-4 mt-14">
+            <div className="grid grid-cols-1 gap-4">
             <div className="flex gap-2 flex-wrap">
                 <button
                   type="button"
@@ -443,8 +471,20 @@ const SmartSearchForm = ({
               <p className="text-xs text-red-600">{errors.formData}</p>
             )}
 
-            {/* Footer */}
-      
+            {/* Confirmation Modal */}
+            {isConfirmOpen && (
+            <ConfirmationModal
+              pageCount={pageCount}
+              setPageCount={setPageCount}
+              estimatedLeads={estimatedLeads}
+              estimatedCredits={estimatedCredits}
+              estimatedCost={estimatedCost}
+              perSearchCost={perSearchCost}
+              closeModal={closeModal}
+              isOpen={isConfirmOpen}
+              proceedSubmit={proceedSubmit}
+            />
+            )}
           </Form>
         );
       }}

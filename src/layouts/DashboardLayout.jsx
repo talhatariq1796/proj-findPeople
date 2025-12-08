@@ -31,7 +31,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="min-h-screen bg-slate-100 w-full">
-      <div className="flex flex-col space-y-5 w-full h-full">
+      <div className="flex flex-col w-full h-screen">
         <Navbar
           title={navTitle}
           profile={profile}
@@ -40,7 +40,7 @@ const DashboardLayout = () => {
           onProfile={handleProfileNavigation}
           onLogout={handleLogout}
         />
-        <div className="px-6 pb-6">
+        <div className=" h-[92vh] px-6 py-4">
           <Outlet
             context={{
               profile,
