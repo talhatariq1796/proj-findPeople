@@ -212,7 +212,7 @@ const DynamicTable = ({
 
   return (
 
-    <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6 h-[90vh] overflow-hidden relative pb-[150px]">
+    <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6 h-full overflow-hidden relative pb-[150px]">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Search Results</h2>

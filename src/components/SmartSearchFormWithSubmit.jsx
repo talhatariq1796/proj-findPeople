@@ -65,7 +65,7 @@ const FormWithTable = ({
         </div>
       </aside>
 
-      <div className="w-full lg:w-[75%]">
+      <div className="w-full lg:w-[75%] h-full">
         <DynamicTable
           data={
             apiResponse

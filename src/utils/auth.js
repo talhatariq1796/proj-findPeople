@@ -45,10 +45,8 @@ const isAccessTokenFresh = (expiresAt) => {
 };
 
 const callRefreshEndpoint = async (apiBaseUrl, refreshToken) => {
-  const endpoints = [
-    `${apiBaseUrl}/icp/api/auth/refresh`,
-    `${apiBaseUrl}/api/auth/refresh`,
-  ];
+  const endpoints = `${apiBaseUrl}/api/auth/refresh`
+  
 
   for (const url of endpoints) {
     try {
