@@ -1,7 +1,16 @@
 import React from "react";
 import { FaDownload } from "react-icons/fa";
 
-const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }) => {
+const DynamicTable = ({
+  data,
+  loading,
+  error,
+  pagination,
+  onPageChange,
+}) => {
+  const displayLeads = data?.visibleLeads || data?.leads || [];
+  const columnSource = data?.leads && data.leads.length ? data.leads : displayLeads;
+
   if (loading) {
     return (
       <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6">
@@ -36,7 +45,7 @@ const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }
 
   // Get all unique keys from all leads to create columns
   const allKeys = new Set();
-  data.leads.forEach((lead) => {
+  columnSource.forEach((lead) => {
     Object.keys(lead).forEach((key) => allKeys.add(key));
   });
 
@@ -104,18 +113,59 @@ const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }
     if (value === null || value === undefined || value === "") {
       return <span className="text-gray-400 italic">—</span>;
     }
+  
     if (typeof value === "object") {
       return JSON.stringify(value);
     }
-    if (typeof value === "string" && value.length > 100) {
+  
+    const str = String(value).trim();
+  
+    // URL patterns
+    const fullUrlRegex = /^https?:\/\/[^\s]+$/i;
+    const wwwRegex = /^www\.[^\s]+$/i;
+  
+    // Full URL
+    if (fullUrlRegex.test(str)) {
       return (
-        <span title={value} className="truncate block max-w-xs">
-          {value.substring(0, 100)}...
+        <a
+          href={str}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-indigo-600 underline hover:text-indigo-800 break-all"
+        >
+          {str}
+        </a>
+      );
+    }
+  
+    // www only — prepend https://
+    if (wwwRegex.test(str)) {
+      const fixedUrl = `https://${str}`;
+      return (
+        <a
+          href={fixedUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-indigo-600 underline hover:text-indigo-800 break-all"
+        >
+          {str}
+        </a>
+      );
+    }
+  
+    // Long strings fallback
+    if (str.length > 100) {
+      return (
+        <span title={str} className="truncate block max-w-xs">
+          {str.substring(0, 100)}...
         </span>
       );
     }
-    return String(value);
+  
+    return str;
   };
+  
+  
 
   // Format column name for display
   const formatColumnName = (key) => {
@@ -125,15 +175,39 @@ const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }
       .trim();
   };
 
+  const paginationState = pagination || {};
+  const pageNumbers = (paginationState.pageNumbers || []).sort((a, b) => a - b);
+  const currentPage = paginationState.currentPage || 1;
+  const hasMore = paginationState.hasMore;
+  const isPageLoading = paginationState.isPageLoading;
+
+  const nextPageNumber =
+    pageNumbers.length > 0 ? pageNumbers[pageNumbers.length - 1] + 1 : 1;
+
+  const displayedPages = [...pageNumbers];
+  if (hasMore) {
+    displayedPages.push(nextPageNumber);
+  }
+
+  const handlePageClick = (page) => {
+    if (!onPageChange) return;
+    const isLoaded = pageNumbers.includes(page);
+    const canFetch = hasMore && page === nextPageNumber;
+    if (isLoaded || canFetch) {
+      onPageChange(page);
+    }
+  };
+
+  
   return (
 
-    <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6">
+    <div className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6 h-[90vh] overflow-hidden relative pb-[150px]">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Search Results</h2>
           {data.total !== undefined && (
             <p className="text-sm text-gray-500 mt-1">
-              Total: {data.total.toLocaleString()} | Showing: {data.leads.length}
+              Total: {data.total.toLocaleString()} | Page {currentPage} • Showing {displayLeads.length} / 50
               {hasMore && (
                 <span className="ml-2 text-indigo-600">(More available)</span>
               )}
@@ -159,8 +233,7 @@ const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }
           </button>
         </div>
       </div>
-
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto h-full overflow-y-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -175,7 +248,7 @@ const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {data.leads.map((lead, index) => (
+            {displayLeads.map((lead, index) => (
               <tr key={index} className="hover:bg-gray-50">
                 {columns.map((column) => (
                   <td
@@ -190,35 +263,56 @@ const DynamicTable = ({ data, loading, loadingMore, error, onLoadMore, hasMore }
           </tbody>
         </table>
       </div>
+      {/* Pagination */}
+      <div className="absolute bottom-0 left-0 right-0 bg-white border border-gray-200 ">
+        {displayedPages.length > 0 && (
+          <div className="flex flex-wrap items-center justify-center gap-2 p-4">
+            <button
+              onClick={() => handlePageClick(currentPage - 1)}
+              disabled={currentPage === 1 || isPageLoading}
+              className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+            >
+              Prev
+            </button>
 
-      {/* Load More Button */}
-      {hasMore && (
-        <div className="mt-4 flex justify-center">
-          <button
-            onClick={onLoadMore}
-            disabled={loadingMore}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-          >
-            {loadingMore ? (
-              <>
-                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Loading...
-              </>
-            ) : (
-              "Load More"
+            {displayedPages.map((page) => {
+              const isActive = page === currentPage;
+              const isLoaded = pageNumbers.includes(page);
+              const canFetch = hasMore && page === nextPageNumber;
+              const disabled = isPageLoading || (!isLoaded && !canFetch);
+
+              return (
+                <button
+                  key={page}
+                  onClick={() => handlePageClick(page)}
+                  disabled={disabled}
+                  className={`px-3 py-1 text-sm rounded-md border transition-colors ${isActive
+                      ? "bg-indigo-600 text-white border-indigo-600"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                    } ${disabled ? "opacity-60" : ""}`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() => handlePageClick(currentPage + 1)}
+              disabled={
+                isPageLoading ||
+                (!hasMore && currentPage === displayedPages[displayedPages.length - 1])
+              }
+              className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+            >
+              Next
+            </button>
+
+            {isPageLoading && (
+              <span className="text-xs text-gray-500 ml-2">Loading page...</span>
             )}
-          </button>
-        </div>
-      )}
-
-      {!hasMore && data && data.leads && data.leads.length > 0 && (
-        <div className="mt-4 text-center text-sm text-gray-500">
-          No more results to load
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

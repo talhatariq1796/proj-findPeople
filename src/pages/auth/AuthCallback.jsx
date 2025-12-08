@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { storeSessionTokens } from "../../utils/auth";
 
 const AuthCallback = () => {
     const navigate = useNavigate();
@@ -12,14 +13,12 @@ const AuthCallback = () => {
         const refreshToken = params.get("refresh_token");
         const expiresAt = params.get("expires_at");
 
-        if (accessToken) {
-            localStorage.setItem("auth_token", accessToken);
-        }
-        if (refreshToken) {
-            localStorage.setItem("refresh_token", refreshToken);
-        }
-        if (expiresAt) {
-            localStorage.setItem("expires_at", expiresAt);
+        if (accessToken || refreshToken || expiresAt) {
+            storeSessionTokens({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+                expires_at: expiresAt ? Number(expiresAt) : undefined,
+            });
         }
 
         navigate("/home"); 

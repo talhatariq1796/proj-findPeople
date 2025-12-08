@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import { clearSession, ensureFreshToken } from "../utils/auth";
 
 const Profile = () => {
   const {
@@ -46,12 +47,6 @@ const Profile = () => {
     setFormError("");
     setFormSuccess("");
 
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      setFormError("Missing session. Please sign in again.");
-      return;
-    }
-
     const payload = {};
 
     if (formData.first_name.trim() !== (profile?.first_name || "")) {
@@ -71,6 +66,15 @@ const Profile = () => {
 
     setSaving(true);
     try {
+      const token = await ensureFreshToken(apiBaseUrl);
+
+      if (!token) {
+        clearSession();
+        setFormError("Session expired. Please sign in again.");
+        setSaving(false);
+        return;
+      }
+
       const response = await fetch(`${apiBaseUrl}/icp/api/profile`, {
         method: "PUT",
         headers: {
@@ -79,6 +83,13 @@ const Profile = () => {
         },
         body: JSON.stringify(payload),
       });
+
+      if (response.status === 401) {
+        clearSession();
+        setFormError("Session expired. Please sign in again.");
+        setSaving(false);
+        return;
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

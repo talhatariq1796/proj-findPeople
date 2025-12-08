@@ -7,10 +7,11 @@ import DynamicTable from "./DynamicTable";
 const FormWithTable = ({
   apiResponse,
   loading,
-  loadingMore,
   error,
-  onLoadMore,
-  hasMore,
+  onPageChange,
+  paginationInfo,
+  visibleLeads,
+  allLeads,
   ...formProps
 }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -42,7 +43,7 @@ const FormWithTable = ({
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-11/12 max-w-sm transform bg-white transition-transform rounded-2xl duration-300 shadow-2xl lg:relative lg:inset-auto lg:w-[25%] lg:max-w-none lg:translate-x-0 ${
+        className={`fixed h-[90vh] inset-y-0 left-0 z-40 w-11/12 max-w-sm transform bg-white transition-transform rounded-2xl duration-300 shadow-2xl lg:relative lg:inset-auto lg:w-[25%] lg:max-w-none lg:translate-x-0 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-label="Search Filters"
@@ -65,12 +66,19 @@ const FormWithTable = ({
 
       <div className="w-full lg:w-[75%]">
         <DynamicTable
-          data={apiResponse}
+          data={
+            apiResponse
+              ? {
+                  ...apiResponse,
+                  visibleLeads: visibleLeads || [],
+                  leads: allLeads || apiResponse.leads,
+                }
+              : apiResponse
+          }
           loading={loading}
-          loadingMore={loadingMore}
           error={error}
-          onLoadMore={onLoadMore}
-          hasMore={hasMore}
+          pagination={paginationInfo}
+          onPageChange={onPageChange}
         />
       </div>
     </div>

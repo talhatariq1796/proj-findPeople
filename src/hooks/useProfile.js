@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { clearSession, ensureFreshToken } from "../utils/auth";
 
 const useProfile = (apiBaseUrl) => {
   const [profile, setProfile] = useState(null);
@@ -7,18 +8,21 @@ const useProfile = (apiBaseUrl) => {
 
   const fetchProfile = useCallback(
     async (signal) => {
-      const token = localStorage.getItem("auth_token");
-
-      if (!token) {
-        setProfile(null);
-        setError("Missing session. Please sign in again.");
-        setLoading(false);
-        return;
-      }
-
       try {
         setLoading(true);
         setError("");
+
+        const token = await ensureFreshToken(apiBaseUrl);
+
+        if (signal?.aborted) return;
+
+        if (!token) {
+          clearSession();
+          setProfile(null);
+          setError("Session expired. Please sign in again.");
+          setLoading(false);
+          return;
+        }
 
         const response = await fetch(`${apiBaseUrl}/icp/api/profile`, {
           headers: {
@@ -26,6 +30,14 @@ const useProfile = (apiBaseUrl) => {
           },
           signal,
         });
+
+        if (response.status === 401) {
+          clearSession();
+          setProfile(null);
+          setError("Session expired. Please sign in again.");
+          setLoading(false);
+          return;
+        }
 
         if (!response.ok) {
           throw new Error("Failed to fetch profile details");

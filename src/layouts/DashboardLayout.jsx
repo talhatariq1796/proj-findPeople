@@ -2,6 +2,7 @@ import React from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import useProfile from "../hooks/useProfile";
+import { clearSession } from "../utils/auth";
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const DashboardLayout = () => {
   } = useProfile(resolvedApiBaseUrl);
 
   const handleLogout = () => {
-    localStorage.removeItem("auth_token");
+    clearSession();
     navigate("/", { replace: true });
   };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { storeSessionTokens } from '../utils/auth';
 
 const AuthForm = ({ mode, onToggleMode, apiBaseUrl }) => {
   const [formData, setFormData] = useState({
@@ -86,8 +87,9 @@ const AuthForm = ({ mode, onToggleMode, apiBaseUrl }) => {
         return;
       }
 
-      if (data.session?.access_token) {
-        localStorage.setItem('auth_token', data.session.access_token);
+      const session = data?.session || data;
+      if (session?.access_token || session?.refresh_token) {
+        storeSessionTokens(session);
       }
 
       setSuccess(mode === 'signup' ? 'Account created! Please verify the email.' : 'Welcome back!');

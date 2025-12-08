@@ -10,16 +10,21 @@ const parseCommaSeparatedValues = (value = "") =>
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
 
+const PAGE_SIZE = 50;
+
 const withFormSubmit = (WrappedComponent) => {
   const WithFormSubmit = (props) => {
     const [apiResponse, setApiResponse] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [loadingMore, setLoadingMore] = useState(false);
+    const [loadingPage, setLoadingPage] = useState(false);
     const [error, setError] = useState(null);
     const [currentQuery, setCurrentQuery] = useState(null);
     const [currentApiKey, setCurrentApiKey] = useState(null);
     const [paginationToken, setPaginationToken] = useState(null);
     const [searchCount, setSearchCount] = useState(0);
+    const [pages, setPages] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [allLeads, setAllLeads] = useState([]);
 
     const hasResults = (response) =>
       response &&
@@ -29,7 +34,7 @@ const withFormSubmit = (WrappedComponent) => {
     const makeApiCall = async (query, apiKey, pagination = null) => {
       const requestBody = {
         query,
-        pagination: pagination || { size: 50 },
+        pagination: pagination || { size: PAGE_SIZE },
       };
 
       const response = await fetch("https://app.icypeas.com/api/sfind-people", {
@@ -54,11 +59,41 @@ const withFormSubmit = (WrappedComponent) => {
       return responseData;
     };
 
+    const resetPaginationState = () => {
+      setPaginationToken(null);
+      setPages([]);
+      setCurrentPage(1);
+      setAllLeads([]);
+    };
+
+    const addPageData = (pageNumber, responseData) => {
+      const newLeads = responseData.leads || [];
+
+      setPages((prev) => {
+        const filtered = prev.filter((page) => page.pageNumber !== pageNumber);
+        return [...filtered, { pageNumber, leads: newLeads }].sort(
+          (a, b) => a.pageNumber - b.pageNumber
+        );
+      });
+
+      setAllLeads((prev) => [...prev, ...newLeads]);
+
+      setApiResponse((prev) => {
+        const combinedLeads = [...(prev?.leads || []), ...newLeads];
+        return {
+          ...(prev || {}),
+          ...responseData,
+          leads: combinedLeads,
+        };
+      });
+    };
+
     const handleSubmit = async (values, actions) => {
       try {
         setLoading(true);
         setError(null);
         setApiResponse(null);
+        resetPaginationState();
 
         // Transform form data to API format
         const query = {};
@@ -121,19 +156,26 @@ const withFormSubmit = (WrappedComponent) => {
 
         setCurrentQuery(query);
         setCurrentApiKey(apiKey);
-        setPaginationToken(null);
 
-        const responseData = await makeApiCall(query, apiKey);
+        const responseData = await makeApiCall(query, apiKey, {
+          size: PAGE_SIZE,
+        });
         if (hasResults(responseData)) {
           setSearchCount((prev) => prev + 1);
         }
 
-        // Store pagination token if present
-        if (responseData.pagination && responseData.pagination.token) {
-          setPaginationToken(responseData.pagination.token);
-        } else {
-          setPaginationToken(null);
-        }
+        resetPaginationState();
+
+        const initialToken =
+          responseData.pagination && responseData.pagination.token
+            ? responseData.pagination.token
+            : null;
+        setPaginationToken(initialToken);
+
+        const initialLeads = responseData.leads || [];
+        setPages([{ pageNumber: 1, leads: initialLeads }]);
+        setAllLeads(initialLeads);
+        setCurrentPage(1);
 
         setApiResponse(responseData);
         actions.setSubmitting(false);
@@ -145,17 +187,17 @@ const withFormSubmit = (WrappedComponent) => {
       }
     };
 
-    const handleLoadMore = async () => {
+    const handleFetchNextPage = async () => {
       if (!paginationToken || !currentQuery || !currentApiKey) {
         return;
       }
 
       try {
-        setLoadingMore(true);
+        setLoadingPage(true);
         setError(null);
 
         const pagination = {
-          size: 5,
+          size: PAGE_SIZE,
           token: paginationToken,
         };
 
@@ -171,22 +213,43 @@ const withFormSubmit = (WrappedComponent) => {
           setPaginationToken(null);
         }
 
-        // Append new leads to existing ones
-        if (apiResponse && responseData.leads) {
-          setApiResponse({
-            ...apiResponse,
-            leads: [...apiResponse.leads, ...responseData.leads],
-            pagination: responseData.pagination,
-          });
-        } else {
-          setApiResponse(responseData);
-        }
+        const nextPageNumber = pages.length + 1;
+        addPageData(nextPageNumber, responseData);
+        setCurrentPage(nextPageNumber);
       } catch (err) {
         setError(err.message || "An error occurred while loading more data");
       } finally {
-        setLoadingMore(false);
+        setLoadingPage(false);
       }
     };
+
+    const handlePageChange = async (targetPage) => {
+      const totalPages = apiResponse?.total
+        ? Math.ceil(apiResponse.total / PAGE_SIZE)
+        : null;
+
+      if (targetPage < 1) return;
+      if (totalPages && targetPage > totalPages) return;
+
+      const isPageLoaded = pages.some((page) => page.pageNumber === targetPage);
+      const nextPageToFetch = pages.length + 1;
+
+      if (isPageLoaded) {
+        setCurrentPage(targetPage);
+        return;
+      }
+
+      // Only allow fetching the immediate next page to keep pagination tokens valid
+      if (targetPage !== nextPageToFetch) {
+        setError("Please load pages sequentially.");
+        return;
+      }
+
+      await handleFetchNextPage();
+    };
+
+    const visibleLeads =
+      pages.find((page) => page.pageNumber === currentPage)?.leads || [];
 
     return (
       <WrappedComponent
@@ -194,10 +257,19 @@ const withFormSubmit = (WrappedComponent) => {
         onSubmit={handleSubmit}
         apiResponse={apiResponse}
         loading={loading}
-        loadingMore={loadingMore}
         error={error}
-        onLoadMore={handleLoadMore}
-        hasMore={!!paginationToken}
+        onPageChange={handlePageChange}
+        paginationInfo={{
+          currentPage,
+          totalPages: apiResponse?.total
+            ? Math.ceil(apiResponse.total / PAGE_SIZE)
+            : null,
+          pageNumbers: pages.map((page) => page.pageNumber),
+          hasMore: !!paginationToken,
+          isPageLoading: loadingPage,
+        }}
+        visibleLeads={visibleLeads}
+        allLeads={allLeads}
         searchCount={searchCount}
       />
     );

@@ -81,6 +81,17 @@ const SmartSearchForm = ({
     }));
   };
 
+  const expandAllSections = () => {
+    const expanded = {};
+    includeExcludeFieldConfigs.forEach(({ key }) => {
+      expanded[key] = true;
+    });
+    expanded[headcountFieldConfig.key] = true;
+    setExpandedSections(expanded);
+  };
+
+  const collapseAllSections = () => setExpandedSections({});
+
   return (
     <Formik
       initialValues={initialValues}
@@ -113,13 +124,14 @@ const SmartSearchForm = ({
         );
 
         return (
-          <Form className="w-full mx-auto bg-white border border-gray-200 rounded-2xl shadow-md p-6 space-y-6">
+          <Form className="w-full mx-auto p-6 space-y-6 ">
             {/* Header */}
-            <div>
+            <div className="flex flex-col items-start gap-3">
               <h1 className="text-lg font-semibold text-gray-900">
                 Smart Search
               </h1>
               <p className="text-xs text-gray-500">Fill the fields below.</p>
+           
             </div>
 
             {/* API Key Field */}
@@ -172,14 +184,16 @@ const SmartSearchForm = ({
             </div>
             <div className="bg-blue-50 border border-blue-700 rounded-lg px-3 py-2 text-center space-y-1">
               <p className="text-[11px] text-red-700 font-medium tracking-wide">
-                ${perSearchCost} per search 
+                ${perSearchCost} per search
               </p>
               <p className="text-[11px] text-gray-700">
                 Searches: {searchCount} • Total: ${totalCost}
               </p>
+              <p className="text-[11px] text-gray-700">
+                Credits used: {searchCount} • Cost this search: ${perSearchCost} (1 credit = 1 page / 50 results)
+              </p>
               {/* <p className="text-[11px] text-gray-600">
-                100 results ≈ ${hundredResultsCost} (≈{COST_ADVANTAGE_MULTIPLIER}×
-                cheaper vs Apollo at ${apolloHundredResultsCost})
+                100 results ≈ ${hundredResultsCost}
               </p> */}
             </div>
             <div className="flex flex-col gap-5 items-center justify-end pt-3 sm:flex-row">
@@ -206,7 +220,25 @@ const SmartSearchForm = ({
               </div>
             </div>
             {/* Include / Exclude Filters */}
-            <div className="grid grid-cols-1 gap-4">
+           
+            <div className="grid grid-cols-1 gap-4 mt-14">
+            <div className="flex gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={expandAllSections}
+                  className="font-medium text-gray-700 text-sm hover:text-indigo-600"
+                >
+                  Expand all
+                </button>
+                <span className="text-gray-500">|</span>
+                <button
+                  type="button"
+                  onClick={collapseAllSections}
+                  className="font-medium text-gray-700 text-sm hover:text-indigo-600"
+                >
+                  Collapse all
+                </button>
+              </div>
               {includeExcludeFieldConfigs.map((field) => {
                 const sectionId = `section-${field.key}`;
                 const isExpanded = !!expandedSections[field.key];
@@ -298,7 +330,7 @@ const SmartSearchForm = ({
               const sectionId = `section-${headcountKey}`;
               const isExpanded = !!expandedSections[headcountKey];
               return (
-                <div className="border border-gray-200 rounded-2xl bg-gray-100">
+                <div className="border border-gray-200 rounded-2xl bg-gray-100 mt-4">
                   <button
                     type="button"
                     onClick={() => toggleSection(headcountKey)}
