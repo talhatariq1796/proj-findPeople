@@ -53,7 +53,7 @@ const validationSchema = Yup.object().shape({
 });
 
 
-const COST_PER_SEARCH = 0.00499; // USD per page (1 credit) on the private sfind route
+const COST_PER_SEARCH = 0.0089; // USD per page (1 credit) on the private sfind route
 const COST_PER_HUNDRED_RESULTS = COST_PER_SEARCH * 2; // 100 results need two 50-result pages
 const APOLLO_COST_PER_HUNDRED_RESULTS = 0.0236;
 const COST_ADVANTAGE_MULTIPLIER = 2.3;
@@ -214,8 +214,11 @@ const SmartSearchForm = ({
               <p className="text-[11px] text-red-700 font-medium tracking-wide">
                 ${perSearchCost} per search
               </p>
-              <p className="text-[11px] text-gray-700">
-                Searches: {searchCount} • Total: ${totalCost}
+              <p className="text-[11px] text-gray-700 font-bold">
+                Searches: {searchCount} 
+              </p>
+              <p className="text-[11px] text-gray-700 font-bold">
+               Total: ${totalCost} <span className="text-gray-500 italic">( Estimated cost based on Icypeas Advanced plan )</span>
               </p>
               <p className="text-[11px] text-gray-700 font-bold">
                 Credits used: {searchCount} • Cost this search: ${perSearchCost} (1 credit = 1 page / 50 results)
